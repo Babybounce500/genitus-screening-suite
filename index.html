@@ -84,7 +84,7 @@
   </div>
 
   <div class="disclaimer">
-    Alle drei Screener sind reine Cache-Auswertungen aus bereits bestehenden Datensätzen (Markov-Zustände, CAGR, 5J-Kurshistorie, Kaplan-Meier-Kurven) — keine Live-Abfrage, keine neuen Berechnungen gegenüber den Einzeltools. "Dividenden-Falle" und "Divergenz" sind Muster-Erkennung, keine Kauf-/Verkaufsempfehlung. Der Safety Score ist eine vereinfachte Heuristik, keine vollständige Kreditrisikoanalyse. Keine Anlageberatung.
+    Cache-Renditen über 50% werden als Datenartefakt (nahe-Null-Cache-Kurs) ausgeschlossen. Alle drei Screener sind reine Cache-Auswertungen aus bereits bestehenden Datensätzen (Markov-Zustände, CAGR, 5J-Kurshistorie, Kaplan-Meier-Kurven) — keine Live-Abfrage, keine neuen Berechnungen gegenüber den Einzeltools. "Dividenden-Falle" und "Divergenz" sind Muster-Erkennung, keine Kauf-/Verkaufsempfehlung. Der Safety Score ist eine vereinfachte Heuristik, keine vollständige Kreditrisikoanalyse. Keine Anlageberatung.
   </div>
 </div>
 <script>
@@ -150,7 +150,7 @@
     const minYield = parseFloat(document.getElementById('trapYieldSelect').value);
     const q = document.getElementById('trapSearch').value.toLowerCase().trim();
     let rows = markovData.perSymbol.filter(r=>{
-      if((r.yieldPct||0) < minYield) return false;
+      if((r.yieldPct||0) < minYield || (r.yieldPct||0) > 50) return false; // >50% is almost always a stale/near-zero cached price artifact
       const bad = r.currentState==='Cut' || r.currentState==='Suspended';
       const cagr = cagrBySymbol[r.symbol];
       const negCagr = cagr?.cagr5y!=null && cagr.cagr5y < 0;
