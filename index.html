@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GENITUS DIVIDENDEN-SCREENING-SUITE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f4f7fb;--surface:#ffffff;--border:#d9e2ec;--accent:#0e7490;--gold:#b45309;--green:#15803d;--red:#b91c1c;--muted:#52606d;--text:#1e293b;--bright:#0f172a;--mono:'Space Mono',monospace;--sans:'Rajdhani',sans-serif;}
+    :root.dark-theme{--bg:#080c10;--surface:#0d1117;--border:#1e2d3d;--accent:#00d4ff;--gold:#f0c040;--green:#00ff88;--red:#ff3b5c;--muted:#7d92a8;--text:#c8d8e8;--bright:#ffffff;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;transition:background .25s,color .25s;}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200;}
+    .logo{display:flex;align-items:center;gap:12px;}
+    .logo-mark{width:32px;height:32px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;color:var(--accent);}
+    .logo-text{font-family:var(--mono);font-size:13px;letter-spacing:3px;color:var(--bright);}
+    .logo-sub{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);display:block;margin-top:1px;}
+    #themeToggleBtn{background:none;border:1px solid var(--border);color:var(--accent);width:30px;height:30px;border-radius:2px;cursor:pointer;font-size:14px;}
+    .cache-badge{font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:3px 8px;border:1px solid var(--accent);color:var(--accent);border-radius:2px;text-transform:uppercase;}
+    .main{max-width:1200px;margin:0 auto;padding:20px;}
+    .tabbar{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+    .tabbtn{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:10px 16px;border-radius:6px;cursor:pointer;}
+    .tabbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .tabpanel{display:none;} .tabpanel.active{display:block;}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;}
+    select,input[type="text"]{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:8px 10px;outline:none;border-radius:2px;}
+    input[type="text"]{width:220px;}
+    .count-badge{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;}
+    table{width:100%;border-collapse:collapse;font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+    th{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:9px 12px;text-align:right;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;}
+    th:hover{color:var(--accent);}
+    th.sorted{color:var(--accent);}
+    th:first-child,th:nth-child(2){text-align:left;}
+    td{padding:8px 12px;border-bottom:1px solid rgba(125,146,168,0.15);text-align:right;}
+    td:first-child{font-weight:700;color:var(--accent);text-align:left;font-family:var(--mono);}
+    td:nth-child(2){text-align:left;}
+    .pos{color:var(--green);} .neg{color:var(--red);}
+    .score-pill{display:inline-block;padding:3px 10px;border-radius:10px;font-weight:700;color:#fff;font-family:var(--mono);font-size:11px;}
+    .info-box{font-size:13px;line-height:1.6;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:14px;}
+    .disclaimer{font-size:10px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:10px;margin-top:14px;}
+    .loading-line{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center;padding:50px;}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-mark">S</div><div><span class="logo-text">GENITUS</span><span class="logo-sub">DIVIDENDEN-SCREENING-SUITE</span></div></div>
+  <div style="display:flex;align-items:center;gap:10px"><span class="cache-badge" id="cacheBadge">● lädt...</span><button id="themeToggleBtn" title="Toggle theme">🌙</button></div>
+</header>
+<div class="main">
+  <div class="tabbar">
+    <button class="tabbtn active" data-tab="trap" onclick="switchTab('trap')">Dividenden-Fallen-Detektor</button>
+    <button class="tabbtn" data-tab="divergence" onclick="switchTab('divergence')">Kurs-Dividenden-Divergenz</button>
+    <button class="tabbtn" data-tab="safety" onclick="switchTab('safety')">Dividend Safety Score</button>
+  </div>
+
+  <div class="tabpanel active" id="tab-trap">
+    <div class="info-box">Hoher Cache-Rendite-Wert <b>plus</b> aktueller Markov-Zustand Cut/Suspended <b>oder</b> negative 5J-CAGR — klassisches Muster einer "Dividenden-Falle": der Kurs ist gefallen, die Rendite sieht optisch attraktiv aus, aber die Dividende ist tatsächlich gefährdet.</div>
+    <div class="toolbar">
+      <label style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase">Min. Rendite</label>
+      <select id="trapYieldSelect" onchange="renderTrap()"><option value="5">5%</option><option value="6" selected>6%</option><option value="8">8%</option><option value="10">10%</option></select>
+      <input type="text" id="trapSearch" placeholder="Symbol/Name filtern..." oninput="renderTrap()">
+      <span class="count-badge" id="trapCount"></span>
+    </div>
+    <table><thead><tr id="trapHead"></tr></thead><tbody id="trapBody"><tr><td colspan="6" class="loading-line">Lade Daten...</td></tr></tbody></table>
+  </div>
+
+  <div class="tabpanel" id="tab-divergence">
+    <div class="info-box">Dividende stabil oder steigend (Markov: Increase/Flat) <b>aber</b> Kurs über 5 Jahre gefallen — mögliche Opportunität (Markt preist Risiko ein, das sich fundamental noch nicht gezeigt hat) ODER ein Vorbote künftiger Probleme. Nur für die ~1.300 S&amp;P-500-Firmen mit Bilanz-Verknüpfung verfügbar (einzige Stelle mit Yahoo↔EODHD-Zuordnung für die 5J-Kurshistorie).</div>
+    <div class="toolbar">
+      <input type="text" id="divSearch" placeholder="Symbol/Name filtern..." oninput="renderDivergence()">
+      <span class="count-badge" id="divCount"></span>
+    </div>
+    <table><thead><tr id="divHead"></tr></thead><tbody id="divBody"><tr><td colspan="6" class="loading-line">Lade Daten...</td></tr></tbody></table>
+  </div>
+
+  <div class="tabpanel" id="tab-safety">
+    <div class="info-box">Kompositindex (0-100): 50% aktueller Markov-Zustand + 30% sektor-typische 5-Jahres-Überlebensrate (Kaplan-Meier) + 20% Länge der aktuellen Steigerungsserie (gekappt bei 20 Jahren). Ein <b>einzelner Blick</b>-Score, kein Ersatz für die ausführlichere Markov/Hazard-Simulation im "Dividenden-Markov &amp; Risk Lab".</div>
+    <div class="toolbar">
+      <input type="text" id="safetySearch" placeholder="Symbol/Name filtern..." oninput="renderSafety()">
+      <select id="safetyExchangeSelect" onchange="renderSafety()"><option value="ALL">Alle Börsen</option></select>
+      <span class="count-badge" id="safetyCount"></span>
+    </div>
+    <table><thead><tr id="safetyHead"></tr></thead><tbody id="safetyBody"><tr><td colspan="5" class="loading-line">Lade Daten...</td></tr></tbody></table>
+  </div>
+
+  <div class="disclaimer">
+    Alle drei Screener sind reine Cache-Auswertungen aus bereits bestehenden Datensätzen (Markov-Zustände, CAGR, 5J-Kurshistorie, Kaplan-Meier-Kurven) — keine Live-Abfrage, keine neuen Berechnungen gegenüber den Einzeltools. "Dividenden-Falle" und "Divergenz" sind Muster-Erkennung, keine Kauf-/Verkaufsempfehlung. Der Safety Score ist eine vereinfachte Heuristik, keine vollständige Kreditrisikoanalyse. Keine Anlageberatung.
+  </div>
+</div>
+<script>
+  const MARKOV_URL = 'https://raw.githubusercontent.com/Babybounce500/genitus-ticker-cache/main/dividend-markov-data.json';
+  const CAGR_URL = 'https://raw.githubusercontent.com/Babybounce500/genitus-ticker-cache/main/cagr-data.json';
+  const HAZARD_URL = 'https://raw.githubusercontent.com/Babybounce500/genitus-ticker-cache/main/dividend-hazard-data.json';
+  const PRICE_HISTORY_URL = 'https://raw.githubusercontent.com/Babybounce500/genitus-ticker-cache/main/price-history-data.json';
+  const CROSSREF_URL = 'https://raw.githubusercontent.com/Babybounce500/genitus-ticker-cache/main/symbol-crossref.json';
+
+  (function(){
+    const KEY='genitusTheme:screening';
+    function applyTheme(t){ document.documentElement.classList.toggle('dark-theme', t==='dark'); localStorage.setItem(KEY,t); const btn=document.getElementById('themeToggleBtn'); if(btn) btn.textContent = t==='dark' ? '☀' : '🌙'; }
+    let saved = localStorage.getItem(KEY) || 'light';
+    applyTheme(saved);
+    document.getElementById('themeToggleBtn').addEventListener('click', function(){ applyTheme(document.documentElement.classList.contains('dark-theme')?'light':'dark'); });
+  })();
+
+  window.switchTab = function(tab){
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.toggle('active', p.id==='tab-'+tab));
+  };
+
+  let markovData=null, cagrData=null, hazardData=null, priceHistory=null, crossref=null;
+  let cagrBySymbol = {}, priceReturnBySymbol = {};
+
+  function currentStreakLength(statesStr){
+    let n=0;
+    for(let i=statesStr.length-1;i>=0;i--){ if(statesStr[i]==='C'||statesStr[i]==='S') break; n++; }
+    return n;
+  }
+
+  async function loadAll(){
+    try{
+      const [m,c,h,p,x] = await Promise.all([fetch(MARKOV_URL), fetch(CAGR_URL), fetch(HAZARD_URL), fetch(PRICE_HISTORY_URL), fetch(CROSSREF_URL)]);
+      markovData = await m.json();
+      cagrData = c.ok ? await c.json() : [];
+      hazardData = h.ok ? await h.json() : null;
+      priceHistory = p.ok ? await p.json() : {};
+      crossref = x.ok ? await x.json() : { fullToYahoo:{} };
+      cagrData.forEach(r=>{ cagrBySymbol[r.symbol] = r; });
+      Object.entries(crossref.fullToYahoo).forEach(([full, yahoo])=>{
+        const ph = priceHistory[yahoo];
+        if(ph?.summary) priceReturnBySymbol[full] = ph.summary;
+      });
+      document.getElementById('cacheBadge').textContent = `● ${markovData.perSymbol.length} Firmen, ${Object.keys(priceReturnBySymbol).length} mit Kurshistorie`;
+      document.getElementById('safetyExchangeSelect').innerHTML = '<option value="ALL">Alle Börsen</option>' +
+        [...new Set(markovData.perSymbol.map(r=>r.exchange))].sort().map(ex=>`<option value="${ex}">${ex}</option>`).join('');
+      buildHeads();
+      renderTrap(); renderDivergence(); renderSafety();
+    }catch(e){
+      document.getElementById('cacheBadge').textContent = '● Fehler';
+      document.getElementById('trapBody').innerHTML = `<tr><td colspan="6" class="loading-line">Fehler: ${e.message}</td></tr>`;
+    }
+  }
+
+  function buildHeads(){
+    document.getElementById('trapHead').innerHTML = '<th>Symbol</th><th>Name</th><th>Börse</th><th>Cache-Rendite</th><th>Zustand</th><th>CAGR 5J</th>';
+    document.getElementById('divHead').innerHTML = '<th>Symbol</th><th>Name</th><th>Sektor</th><th>Zustand</th><th>5J Total Return</th><th>5J Kursrendite</th>';
+    document.getElementById('safetyHead').innerHTML = '<th>Symbol</th><th>Name</th><th>Börse</th><th>Safety Score</th><th>Zustand</th>';
+  }
+
+  window.renderTrap = function(){
+    const minYield = parseFloat(document.getElementById('trapYieldSelect').value);
+    const q = document.getElementById('trapSearch').value.toLowerCase().trim();
+    let rows = markovData.perSymbol.filter(r=>{
+      if((r.yieldPct||0) < minYield) return false;
+      const bad = r.currentState==='Cut' || r.currentState==='Suspended';
+      const cagr = cagrBySymbol[r.symbol];
+      const negCagr = cagr?.cagr5y!=null && cagr.cagr5y < 0;
+      return bad || negCagr;
+    }).filter(r=>!q || r.symbol.toLowerCase().includes(q) || r.name.toLowerCase().includes(q));
+    rows.sort((a,b)=>(b.yieldPct||0)-(a.yieldPct||0));
+    document.getElementById('trapCount').textContent = `${rows.length} Treffer`;
+    document.getElementById('trapBody').innerHTML = rows.slice(0,300).map(r=>{
+      const cagr = cagrBySymbol[r.symbol];
+      return `<tr><td>${r.symbol}</td><td>${r.name}</td><td>${r.exchange}</td>
+        <td class="neg">${(r.yieldPct||0).toFixed(2)}%</td><td>${r.currentState}</td>
+        <td class="${cagr?.cagr5y<0?'neg':''}">${cagr?.cagr5y!=null?cagr.cagr5y.toFixed(1)+'%':'n.v.'}</td></tr>`;
+    }).join('');
+  };
+
+  window.renderDivergence = function(){
+    const q = document.getElementById('divSearch').value.toLowerCase().trim();
+    let rows = markovData.perSymbol.filter(r=>{
+      const pr = priceReturnBySymbol[r.symbol];
+      if(!pr) return false;
+      const healthyDiv = r.currentState==='Increase' || r.currentState==='Flat';
+      return healthyDiv && pr.totalReturn < 0;
+    }).filter(r=>!q || r.symbol.toLowerCase().includes(q) || r.name.toLowerCase().includes(q));
+    rows.sort((a,b)=>priceReturnBySymbol[a.symbol].totalReturn - priceReturnBySymbol[b.symbol].totalReturn);
+    document.getElementById('divCount').textContent = `${rows.length} Treffer`;
+    document.getElementById('divBody').innerHTML = rows.slice(0,300).map(r=>{
+      const pr = priceReturnBySymbol[r.symbol];
+      return `<tr><td>${r.symbol}</td><td>${r.name}</td><td>${r.sector||'—'}</td><td class="pos">${r.currentState}</td>
+        <td class="neg">${pr.totalReturn.toFixed(1)}%</td><td class="neg">${pr.priceReturn.toFixed(1)}%</td></tr>`;
+    }).join('') || '';
+    if(!rows.length) document.getElementById('divBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Keine Treffer im aktuellen Datensatz</td></tr>';
+  };
+
+  function hazardSurvivalAt5y(sector){
+    if(!hazardData) return 0.5;
+    const curve = sector && hazardData.bySector[sector] ? hazardData.bySector[sector] : hazardData.global;
+    const p = curve.find(c=>c.t===5);
+    return p ? p.survival : (curve[curve.length-1]?.survival ?? 0.5);
+  }
+  const STATE_SCORE = { Increase:100, Flat:80, Resumed:60, Cut:25, Suspended:0 };
+  function safetyScoreFor(r){
+    const stateScore = STATE_SCORE[r.currentState] ?? 50;
+    const hazardScore = hazardSurvivalAt5y(r.sector) * 100;
+    const streak = currentStreakLength(r.states);
+    const streakScore = Math.min(streak,20)/20*100;
+    return Math.round(stateScore*0.5 + hazardScore*0.3 + streakScore*0.2);
+  }
+  function scoreColor(v){ if(v>=65) return '#15803d'; if(v>=45) return '#b45309'; return '#b91c1c'; }
+
+  window.renderSafety = function(){
+    const q = document.getElementById('safetySearch').value.toLowerCase().trim();
+    const ex = document.getElementById('safetyExchangeSelect').value;
+    let rows = markovData.perSymbol.filter(r=>(ex==='ALL'||r.exchange===ex) && (!q || r.symbol.toLowerCase().includes(q) || r.name.toLowerCase().includes(q)));
+    if(!q){ rows = rows.slice(0,2000); } // cap unscoped list for render perf; search narrows it
+    const scored = rows.map(r=>({ r, score: safetyScoreFor(r) }));
+    scored.sort((a,b)=>b.score-a.score);
+    document.getElementById('safetyCount').textContent = `${scored.length} Treffer${!q?' (von '+markovData.perSymbol.length+', ungefiltert auf 2000 begrenzt — bitte suchen)':''}`;
+    document.getElementById('safetyBody').innerHTML = scored.slice(0,300).map(({r,score})=>`<tr>
+      <td>${r.symbol}</td><td>${r.name}</td><td>${r.exchange}</td>
+      <td><span class="score-pill" style="background:${scoreColor(score)}">${score}</span></td><td>${r.currentState}</td>
+    </tr>`).join('');
+  };
+
+  loadAll();
+</script>
+</body>
+</html>
